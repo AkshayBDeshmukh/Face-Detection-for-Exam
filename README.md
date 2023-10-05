@@ -1,4 +1,4 @@
-# Face-Detection-for-Exam
+# Face Detection
 The code you've provided is a Flask web application that performs face detection using the face-api.js library and displays the results on a web page. It combines both server-side Python code and client-side JavaScript to achieve this. Here's a detailed description of the code:
 
 ### Server-side (Python) code:

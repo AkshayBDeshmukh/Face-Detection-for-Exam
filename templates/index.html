@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection App</title>
+</head>
+<body>
+    <h1>Face Detection App</h1>
+    <div id="videoContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+    <script>
+        // Get the video element
+        const videoElement = document.createElement('video');
+        videoElement.autoplay = true;
+        videoElement.width = 640;
+        videoElement.height = 480;
+
+        // Access the user's camera
+        navigator.mediaDevices.getUserMedia({ video: {} })
+            .then((stream) => {
+                videoElement.srcObject = stream;
+            })
+            .catch((error) => {
+                console.error('Error accessing camera:', error);
+            });
+
+        // Append the video element to the container
+        const videoContainer = document.getElementById('videoContainer');
+        videoContainer.appendChild(videoElement);
+
+        // Load face-api.js models
+        Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+            faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+            faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+        ]).then(startFaceDetection);
+
+        // Perform face detection
+        function startFaceDetection() {
+            videoElement.addEventListener('play', () => {
+                const canvas = faceapi.createCanvasFromMedia(videoElement);
+                videoContainer.appendChild(canvas);
+
+                const displaySize = { width: videoElement.width, height: videoElement.height };
+                faceapi.matchDimensions(canvas, displaySize);
+
+                setInterval(async () => {
+                    const detections = await faceapi.detectAllFaces(videoElement, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+                    const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                    faceapi.draw.drawDetections(canvas, resizedDetections);
+                    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                }, 100);
+            });
+        }
+    </script>
+</body>
+</html>
